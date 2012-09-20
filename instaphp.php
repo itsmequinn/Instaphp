@@ -32,15 +32,15 @@
 
 namespace Instaphp {
     
-    require_once('config.php');
-	require_once('webrequest.php');
-    require_once('request.php');
-    require_once('response.php');
-    require_once('instagram/instagrambase.php');
-    require_once('instagram/users.php');
-    require_once('instagram/media.php');
-    require_once('instagram/tags.php');
-    require_once('instagram/locations.php');
+    require_once('Config.php');
+	require_once('Webrequest.php');
+    require_once('Request.php');
+    require_once('Response.php');
+    require_once('Instagram/Instagrambase.php');
+    require_once('Instagram/Users.php');
+    require_once('Instagram/Media.php');
+    require_once('Instagram/Tags.php');
+    require_once('Instagram/Locations.php');
     
     /**
      * A simple base class used to instantiate the various other API classes
