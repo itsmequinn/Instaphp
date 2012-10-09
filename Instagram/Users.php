@@ -46,9 +46,9 @@ namespace Instaphp\Instagram {
     class Users extends InstagramBase
     {
 
-        public function __construct($token = null)
+        public function __construct($token, $callback)
         {
-            parent::__construct($token);
+            parent::__construct($token, $callback);
             $this->api_path = '/users';
         }
 
@@ -81,7 +81,7 @@ namespace Instaphp\Instagram {
          */
         public function Info($user_id = 'self')
         {
-            return $this->Get($this->buildUrl($user_id));
+        	return $this->Get($this->buildUrl($user_id));
         }
 
         /**
@@ -175,9 +175,9 @@ namespace Instaphp\Instagram {
          * @param mixed $user_id A user ID or 'self' to get info about the currently authenticated user
          * @return Response
          */
-        public function Requests($user_id)
+        public function Requests()
         {
-	
+            return $this->Get($this->buildUrl('self/requested-by'));
         }
 
         /**

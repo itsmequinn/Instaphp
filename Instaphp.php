@@ -32,6 +32,7 @@
 
 namespace Instaphp {
     
+<<<<<<< HEAD:Instaphp.php
     require_once('Config.php');
 	require_once('Webrequest.php');
     require_once('Request.php');
@@ -41,6 +42,17 @@ namespace Instaphp {
     require_once('Instagram/Media.php');
     require_once('Instagram/Tags.php');
     require_once('Instagram/Locations.php');
+=======
+    require_once('config.php');
+	require_once('webrequest.php');
+    require_once('request.php');
+    require_once('response.php');
+    require_once('instagram/instagrambase.php');
+    require_once('instagram/users.php');
+    require_once('instagram/media.php');
+    require_once('instagram/tags.php');
+    require_once('instagram/locations.php');
+>>>>>>> 0a004f57ef32e2f166f6b36c4a6e8e453ee9fb82:instaphp.php
     
     /**
      * A simple base class used to instantiate the various other API classes
@@ -55,39 +67,42 @@ namespace Instaphp {
          * @var Users
          * @access public
          */
-        public $Users = null;
+        public $Users = NULL;
         /**
          * @var Media
          * @access public
          */
-        public $Media = null;
+        public $Media = NULL;
         /**
          * @var Tags
          * @access public
          */
-        public $Tags = null;
+        public $Tags = NULL;
         /**
          * @var Locations
          */
-        public $Locations = null;
+        public $Locations = NULL;
 
         /**
          * Contains the last API url called
          *
          * @var string
          **/
-        public $url = null;
+        public $url = NULL;
 
         private static $instance = null;
+
         /**
          * The constructor constructs, but only for itself
+         * @param null $token
+         * @return \Instaphp\Instaphp
          */
-        final private function __construct($token = null)
+        final private function __construct($token, $callback)
         {
-            $this->Users = new Instagram\Users($token);
-            $this->Media = new Instagram\Media($token);
-            $this->Tags = new Instagram\Tags($token);
-            $this->Locations = new Instagram\Locations($token);
+            $this->Users = new Instagram\Users($token, $callback);
+            $this->Media = new Instagram\Media($token, $callback);
+            $this->Tags = new Instagram\Tags($token, $callback);
+            $this->Locations = new Instagram\Locations($token, $callback);
         }
         
         /**
@@ -95,10 +110,10 @@ namespace Instaphp {
          * We don't need to go instantiating all these objects more than once here
          * @return Instaphp 
          */
-        public static function Instance($token = null)
+        public static function Instance($token = NULL, $callback = NULL)
         {
             if (self::$instance == null || !empty($token)) {
-                self::$instance = new self($token);
+                self::$instance = new self($token, $callback);
             }
             return self::$instance;
         }

@@ -33,7 +33,6 @@
 namespace Instaphp {
 
     use Instaphp\Config;
-	use Instaphp\Cache;
 	use Instaphp\WebRequest;
     /**
      * Request
@@ -64,46 +63,31 @@ namespace Instaphp {
          * @access private
          */
         private $useCurl = false;
-
-		/**
-		 *
-		 * @var iCache Cache object used for caching
-		 * @access private
-		 */
-		private $_cache = null;
-
+        
         /**
+         * A global callback method to process the response before it's returned
+         * @var object A callable object
+         */
+        protected $callback;
+        
+		/**
          * The constructor contructs
          * @param string $url A URL in which to create a new request (optional)
          * @param Array $params An associated array of key/value pairs to pass to said URL (optional)
          */
-        public function __construct($url = null, $params = array())
+        public function __construct($url = null, $params = array(), $callback)
         {
             $this->useCurl = self::HasCurl();
             $this->parameters = $params;
             $this->url = $url;
-
-/*
-			$cacheConfig = Config::Instance()->GetSection("Instaphp/Cache");
-			if (!empty($cacheConfig) && count($cacheConfig) > 0) {
-				$cacheConfig = $cacheConfig[0];
-				if ($cacheConfig["Enabled"]) {
-					$engine = (string)$cacheConfig["Engine"];
-                    $this->_cache = Cache\Cache::Instance($engine);
-					// $method = new \ReflectionMethod("Instaphp\\Cache\\".$engine, 'Instance');
-					// $this->_cache = $method->invoke(null, null);
-					// $this->_cache = Cache\File::Instance();
-				}
-
-			}
-*/
+            $this->callback = $callback;
         }
 
 
         /**
          * Makes a GET request
          * @param string $url A URL in which to make a GET request
-         * @param Array $params An associative array of key/value pairs to pass to said URL
+         * @param \Array $params An associative array of key/value pairs to pass to said URL
          * @return Request
          */
         public function Get($url = null, $params = array())
@@ -112,25 +96,10 @@ namespace Instaphp {
                 $this->url = $url;
 
 			if (!empty($params))
-				$this->parameters = $params;
-			$query = '';
-			foreach ($this->parameters as $k => $v)
-				$query .= ((strlen ($query) == 0) ? '?' : '&') . sprintf('%s=%s', $k, $v);
-
-			if (null !== $this->_cache) {
-				$key = sha1($url.$query);
-
-				if (false === ($response = $this->_cache->Get($key))) {
-					$response = $this->GetResponse();
-					if (empty ($response->error)) {
-						$this->_cache->Set($key, $response);
-					}
-				}
-			} else {
-				$response = $this->GetResponse();
-			}
-
-            $this->response = $response;
+				$this->parameters = array_merge($this->parameters, $params);
+			
+            $this->response = $this->GetResponse();
+            
             return $this;
         }
 
@@ -146,7 +115,7 @@ namespace Instaphp {
                 $this->url = $url;
 
 			if (!empty($params))
-				$this->parameters = $params;
+				$this->parameters = array_merge($this->parameters, $params);
 
             $this->response = $this->GetResponse('POST');
             return $this;
@@ -175,7 +144,7 @@ namespace Instaphp {
                 $this->url = $url;
 
 			if (!empty($params))
-				$this->parameters = $params;
+				$this->parameters = array_merge($this->parameters, $params);
 
             $this->response = $this->GetResponse('DELETE');
             return $this;
@@ -198,14 +167,25 @@ namespace Instaphp {
 				$response = new Response;
 
 				$http = WebRequest::Instance();
+				
+				//-- if this is an authenticated call, remove the client_id
+				if (isset($this->parameters['access_token']))
+					unset($this->parameters['client_id']);
+				
 				$res = $http->Create($this->url, $method, $this->parameters);
 
 				if ($res instanceof Error)
 					return $res;
-
-				$response->info = $res->Info;
-				$response->json = $res->Content;
+				
+				$response->info = $res->info;
+				$response->json = $res->body;
+                $response->headers = $res->headers;
 				$response = Response::Create($this, $response);
+				
+				if (NULL !== $this->callback && is_callable($this->callback))
+					call_user_func($this->callback, $response);
+				
+                $this->parameters = array();
                 return $response;
             }
         }

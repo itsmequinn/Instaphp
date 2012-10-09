@@ -75,7 +75,7 @@ namespace Instaphp\Instagram {
          * @access protected
          */
         protected $request;
-
+        
 		/**
 		 * THE parameters array passed to the API call
 		 *
@@ -89,15 +89,17 @@ namespace Instaphp\Instagram {
          * If you inherit from this class, you must call the parent constructor
          * @access public
          */
-        public function __construct($token = null)
+        public function __construct($token, $callback)
         {
             $this->config = Config::Instance();
 			$this->default_params['client_id'] = $this->config->Instagram->ClientId;
 			
-			if (!empty($token))
+			if (!empty($token)) {
 				$this->default_params['access_token'] = $token;
+				unset($this->default_params['client_id']);
+			}
 				
-            $this->request = new Request();
+            $this->request = new Request(null, array(), $callback);
         }
 
         /**
@@ -114,8 +116,10 @@ namespace Instaphp\Instagram {
 
 			if (!empty($params))
 				$this->AddParams($params);
+			
+            $obj = $this->request->Get($url, array_merge($this->default_params, $this->parameters));
             
-            return $this->request->Get($url, array_merge($this->default_params, $this->parameters))->response;
+            return $obj->response;
         }
 
         /**
@@ -196,7 +200,7 @@ namespace Instaphp\Instagram {
          */
         public function AddParams(Array $params = array())
         {
-			$this->parameters = $params;
+			$this->request->parameters = array_merge($this->request->parameters, $params);
         }
 
         /**
@@ -211,7 +215,7 @@ namespace Instaphp\Instagram {
         public function AddParam($name, $value)
         {
             if (!empty($name))
-                $this->parameters[$name] = $value;
+                $this->request->parameters[$name] = $value;
         }
 
         /**
@@ -222,8 +226,8 @@ namespace Instaphp\Instagram {
          */
         public function RemoveParam($name)
         {
-            if (isset($this->parameters[$name]))
-                unset($this->parameters[$name]);
+            if (isset($this->request->parameters[$name]))
+                unset($this->request->parameters[$name]);
         }
 
     }
